@@ -6,10 +6,12 @@ import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
 import com.google.api.client.googleapis.GoogleUtils;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
-import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.http.FileContent;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.util.store.DataStore;
+import com.google.api.client.util.store.DataStoreFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
@@ -19,9 +21,11 @@ import com.google.api.services.drive.model.FileList;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.security.GeneralSecurityException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -69,7 +73,28 @@ public class DriveQuickstart {
         return new AuthorizationCodeInstalledApp(flow, receiver).authorize("user");
     }
 
-    public static void main(String... args) throws IOException, GeneralSecurityException {
+
+    /** Authorizes the installed application to access user's protected data. */
+    private static Credential authorize(final NetHttpTransport HTTP_TRANSPORT) throws Exception {
+        // load client secrets
+        /*GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(JSON_FACTORY,
+                new InputStreamReader(DriveQuickstart.class.getResourceAsStream("\\client_secrets.json")));*/
+
+        GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(JSON_FACTORY,
+                new InputStreamReader(DriveQuickstart.class
+                        .getResourceAsStream("/client_secret_915033595285-am5d1n4dkn673gojcqkksu0jibjthfke.apps.googleusercontent.com.json")));
+
+        // set up authorization code flow
+        GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(
+                HTTP_TRANSPORT, JSON_FACTORY, clientSecrets,Collections.singleton(DriveScopes.DRIVE))
+                .setDataStoreFactory(new FileDataStoreFactory(new java.io.File(TOKENS_DIRECTORY_PATH)))
+                .build();
+        // authorize
+        return new AuthorizationCodeInstalledApp(flow, new LocalServerReceiver()).authorize("user");
+    }
+
+
+    public static void main(String... args) throws Exception {
         // Build a new authorized API client service.
         //final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
 
@@ -78,7 +103,7 @@ public class DriveQuickstart {
         final NetHttpTransport HTTP_TRANSPORT = new NetHttpTransport.Builder().setProxy(proxy).
                 trustCertificates(GoogleUtils.getCertificateTrustStore()).build();
 
-        Drive service = new Drive.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
+        Drive service = new Drive.Builder(HTTP_TRANSPORT, JSON_FACTORY, authorize(HTTP_TRANSPORT))
                 .setApplicationName(APPLICATION_NAME)
                 .build();
 
@@ -96,7 +121,20 @@ public class DriveQuickstart {
                 System.out.printf("%s (%s)\n", file.getName(), file.getId());
             }
         }
-    }
 
+        //上传新文件
+        List<String> parentPath = Arrays.asList("1d7jMphWcnfqDbObYhK64-WbpavnjKknZ");
+        File fileMetadata = new File();
+        fileMetadata.setName("photo.jpg");
+        fileMetadata.setParents(parentPath);
+        java.io.File filePath = new java.io.File("files/photo.jpg");
+        FileContent mediaContent = new FileContent("image/jpeg", filePath);
+        File file = service.files().create(fileMetadata, mediaContent)
+                .setFields("id")
+                .execute();
+        System.out.println("File ID: " + file.getId());
+
+
+    }
 
 }
