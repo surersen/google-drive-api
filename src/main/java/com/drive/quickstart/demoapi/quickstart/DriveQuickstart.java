@@ -10,8 +10,6 @@ import com.google.api.client.http.FileContent;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.api.client.util.store.DataStore;
-import com.google.api.client.util.store.DataStoreFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
@@ -21,10 +19,8 @@ import com.google.api.services.drive.model.FileList;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
-import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -100,16 +96,18 @@ public class DriveQuickstart {
 
         //设置代理
         Proxy proxy = new Proxy(Proxy.Type.HTTP,new InetSocketAddress(PROXY_IP,PROXY_PORT));
-        final NetHttpTransport HTTP_TRANSPORT = new NetHttpTransport.Builder().setProxy(proxy).
-                trustCertificates(GoogleUtils.getCertificateTrustStore()).build();
+        final NetHttpTransport HTTP_TRANSPORT = new NetHttpTransport.Builder()
+                //设置日本代理服务器，导入日本环境时下面 .setProxy(proxy) 需注释掉
+                .setProxy(proxy)
+                .trustCertificates(GoogleUtils.getCertificateTrustStore()).build();
 
         Drive service = new Drive.Builder(HTTP_TRANSPORT, JSON_FACTORY, authorize(HTTP_TRANSPORT))
                 .setApplicationName(APPLICATION_NAME)
                 .build();
 
-        // Print the names and IDs for up to 10 files.
+        // 显示所有文件中的10个
         FileList result = service.files().list()
-                .setPageSize(10)
+                //.setPageSize(10)
                 .setFields("nextPageToken, files(id, name)")
                 .execute();
         List<File> files = result.getFiles();
@@ -125,14 +123,18 @@ public class DriveQuickstart {
         //上传新文件
         List<String> parentPath = Arrays.asList("1d7jMphWcnfqDbObYhK64-WbpavnjKknZ");
         File fileMetadata = new File();
-        fileMetadata.setName("photo.jpg");
+        fileMetadata.setName("fffff.xlsx");
         fileMetadata.setParents(parentPath);
-        java.io.File filePath = new java.io.File("files/photo.jpg");
-        FileContent mediaContent = new FileContent("image/jpeg", filePath);
+
+        java.io.File filePath = new java.io.File("files/fffff.xlsx");
+
+        FileContent mediaContent = new FileContent("application/vnd.ms-excel", filePath);
         File file = service.files().create(fileMetadata, mediaContent)
-                .setFields("id")
+                .setFields("name")
                 .execute();
-        System.out.println("File ID: " + file.getId());
+
+        System.out.println("新上传 File ID: " + file.getId());
+        System.out.println("新上传 File ID: " + file.getName());
 
 
     }
