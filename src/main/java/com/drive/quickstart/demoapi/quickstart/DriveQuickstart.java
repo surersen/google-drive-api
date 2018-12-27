@@ -128,15 +128,14 @@ public class DriveQuickstart {
 
         java.io.File filePath = new java.io.File("files/fffff.xlsx");
 
-        FileContent mediaContent = new FileContent("application/vnd.ms-excel", filePath);
+        FileContent mediaContent = new FileContent("application/vnd.ms-excel;charset=UTF-8", filePath);
         File file = service.files().create(fileMetadata, mediaContent)
-                .setFields("name")
+                .setFields("id")
+                //.setFields("name")
                 .execute();
 
         System.out.println("新上传 File ID: " + file.getId());
-        System.out.println("新上传 File ID: " + file.getName());
-
-
+        //System.out.println("新上传 File ID: " + file.getName());
     }
 
 }
