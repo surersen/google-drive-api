@@ -91,10 +91,10 @@ public class DriveQuickstart {
         //上传新文件
         List<String> parentPath = Arrays.asList("1d7jMphWcnfqDbObYhK64-WbpavnjKknZ");
         File fileMetadata = new File();
-        fileMetadata.setName("fffff.xlsx");
+        fileMetadata.setName("upload0107.xlsx");
         fileMetadata.setParents(parentPath);
 
-        java.io.File filePath = new java.io.File("files/fffff.xlsx");
+        java.io.File filePath = new java.io.File("files/upload0107.xlsx");
 
         FileContent mediaContent = new FileContent("application/vnd.ms-excel;charset=UTF-8", filePath);
         File file = service.files().create(fileMetadata, mediaContent)
@@ -104,6 +104,7 @@ public class DriveQuickstart {
 
         System.out.println("新上传 File ID: " + file.getId());
         //System.out.println("新上传 File ID: " + file.getName());
+
     }
 
 }
